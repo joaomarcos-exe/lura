@@ -14,8 +14,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/joaomarcos-exe/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/logging"
 )
 
 func TestLoadWithLogger(t *testing.T) {

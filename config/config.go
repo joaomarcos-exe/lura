@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/luraproject/lura/v2/encoding"
+	"github.com/joaomarcos-exe/lura/v2/encoding"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

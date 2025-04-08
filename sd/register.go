@@ -3,7 +3,7 @@
 package sd
 
 import (
-	"github.com/luraproject/lura/v2/register"
+	"github.com/joaomarcos-exe/lura/v2/register"
 )
 
 // GetRegister returns the package register

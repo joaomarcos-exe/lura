@@ -9,7 +9,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/luraproject/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/config"
 )
 
 // Namespace to be used in extra config

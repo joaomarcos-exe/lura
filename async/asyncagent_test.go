@@ -6,9 +6,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy"
+	"github.com/joaomarcos-exe/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/logging"
+	"github.com/joaomarcos-exe/lura/v2/proxy"
 )
 
 func TestAgentStarter_Start_last(t *testing.T) {

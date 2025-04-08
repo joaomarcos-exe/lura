@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/sd/dnssrv"
+	"github.com/joaomarcos-exe/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/logging"
+	"github.com/joaomarcos-exe/lura/v2/sd/dnssrv"
 )
 
 func TestNewLoadBalancedMiddleware_ok(t *testing.T) {

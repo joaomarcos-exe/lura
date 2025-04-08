@@ -9,9 +9,9 @@ import (
 	"plugin"
 	"strings"
 
-	"github.com/luraproject/lura/v2/logging"
-	luraplugin "github.com/luraproject/lura/v2/plugin"
-	"github.com/luraproject/lura/v2/register"
+	"github.com/joaomarcos-exe/lura/v2/logging"
+	luraplugin "github.com/joaomarcos-exe/lura/v2/plugin"
+	"github.com/joaomarcos-exe/lura/v2/register"
 )
 
 var serverRegister = register.New()

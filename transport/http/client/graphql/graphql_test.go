@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/luraproject/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/config"
 )
 
 func ExampleNewGraphQLParamExtractor() {

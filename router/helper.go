@@ -3,7 +3,7 @@
 package router
 
 import (
-	"github.com/luraproject/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/config"
 )
 
 func IsValidSequentialEndpoint(_ *config.EndpointConfig) bool {

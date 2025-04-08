@@ -12,11 +12,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/core"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/joaomarcos-exe/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/core"
+	"github.com/joaomarcos-exe/lura/v2/logging"
+	"github.com/joaomarcos-exe/lura/v2/proxy"
+	"github.com/joaomarcos-exe/lura/v2/transport/http/server"
 )
 
 const requestParamsAsterisk string = "*"

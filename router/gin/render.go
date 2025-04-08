@@ -8,9 +8,9 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/encoding"
-	"github.com/luraproject/lura/v2/proxy"
+	"github.com/joaomarcos-exe/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/encoding"
+	"github.com/joaomarcos-exe/lura/v2/proxy"
 )
 
 // Render defines the signature of the functions to be use for the final response

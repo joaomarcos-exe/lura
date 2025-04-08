@@ -3,9 +3,9 @@
 package proxy
 
 import (
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/sd"
+	"github.com/joaomarcos-exe/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/logging"
+	"github.com/joaomarcos-exe/lura/v2/sd"
 )
 
 // Factory creates proxies based on the received endpoint configuration.

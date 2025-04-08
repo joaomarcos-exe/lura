@@ -15,13 +15,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/core"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/joaomarcos-exe/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/core"
+	"github.com/joaomarcos-exe/lura/v2/logging"
+	"github.com/joaomarcos-exe/lura/v2/transport/http/server"
 )
 
-const Namespace = "github_com/luraproject/lura/router/gin"
+const Namespace = "github_com/joaomarcos-exe/lura/router/gin"
 
 type EngineOptions struct {
 	Logger    logging.Logger

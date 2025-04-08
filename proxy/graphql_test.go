@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/transport/http/client/graphql"
+	"github.com/joaomarcos-exe/lura/v2/config"
+	"github.com/joaomarcos-exe/lura/v2/logging"
+	"github.com/joaomarcos-exe/lura/v2/transport/http/client/graphql"
 )
 
 func TestNewGraphQLMiddleware_mutation(t *testing.T) {
