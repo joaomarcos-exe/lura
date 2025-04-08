@@ -4,8 +4,13 @@ package proxy
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
+	"net"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -47,54 +52,97 @@ func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, re client.HTTPRequestE
 
 // NewHTTPProxyDetailed creates a http proxy with the injected configuration, HTTPRequestExecutor,
 // Decoder and HTTPResponseParser
-func NewHTTPProxyDetailed(_ *config.Backend, re client.HTTPRequestExecutor, ch client.HTTPStatusHandler, rp HTTPResponseParser) Proxy {
-	return func(ctx context.Context, request *Request) (*Response, error) {
-		requestToBackend, err := http.NewRequest(strings.ToTitle(request.Method), request.URL.String(), request.Body)
+func NewHTTPProxyDetailed(config *config.Backend, re client.HTTPRequestExecutor, ch client.HTTPStatusHandler, rp HTTPResponseParser) Proxy {
+	var wsProxy *httputil.ReverseProxy
+	log.Printf("METHOD: %s", config.Method)
+	if strings.ToLower(config.Method) == "ws" || strings.ToLower(config.Method) == "wss" {
+		jsonConfig, _ := json.Marshal(config)
+		log.Println("config", string(jsonConfig))
+		backendURL, err := url.Parse(config.Host[0])
 		if err != nil {
-			return nil, err
+			log.Printf("Erro ao parsear URL do backend: %v", err)
+			return nil
 		}
-		requestToBackend.Header = make(map[string][]string, len(request.Headers))
-		for k, vs := range request.Headers {
-			tmp := make([]string, len(vs))
-			copy(tmp, vs)
-			requestToBackend.Header[k] = tmp
+
+		// Configuração do proxy reverso para WebSocket
+		wsProxy = httputil.NewSingleHostReverseProxy(backendURL)
+		wsProxy.Transport = &http.Transport{
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return net.Dial("tcp", backendURL.Host)
+			},
 		}
-		if request.Body != nil {
-			if v, ok := request.Headers["Content-Length"]; ok && len(v) == 1 && v[0] != "chunked" {
-				if size, err := strconv.Atoi(v[0]); err == nil {
-					requestToBackend.ContentLength = int64(size)
+	}
+
+	return func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
+		log.Printf("aqui")
+		if wsProxy != nil {
+			fmt.Printf("URL: %s, PATH: %s", request.URL.Host, request.URL.Path)
+			originalDirector := wsProxy.Director
+			wsProxy.Director = func(req *http.Request) {
+				originalDirector(req)
+				req.URL.Scheme = "http"
+				req.URL.Host = request.URL.Host
+				req.URL.Path = request.Path
+				req.Header.Set("Connection", "Upgrade")
+				req.Header.Set("Upgrade", "websocket")
+				for k, vs := range request.Headers {
+					tmp := make([]string, len(vs))
+					copy(tmp, vs)
+					req.Header.Set(k, tmp[0])
 				}
 			}
-		}
 
-		resp, err := re(ctx, requestToBackend)
-		if requestToBackend.Body != nil {
-			requestToBackend.Body.Close()
-		}
+			wsProxy.ServeHTTP(responseWriter, requestContext)
+			return nil, nil
 
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		resp, err = ch(ctx, resp)
-		if err != nil {
-			if t, ok := err.(responseError); ok {
-				return &Response{
-					Data: map[string]interface{}{
-						fmt.Sprintf("error_%s", t.Name()): t,
-					},
-					Metadata: Metadata{StatusCode: t.StatusCode()},
-				}, nil
+		} else {
+			requestToBackend, err := http.NewRequest(strings.ToTitle(request.Method), request.URL.String(), request.Body)
+			if err != nil {
+				return nil, err
 			}
-			return nil, err
-		}
+			requestToBackend.Header = make(map[string][]string, len(request.Headers))
+			for k, vs := range request.Headers {
+				tmp := make([]string, len(vs))
+				copy(tmp, vs)
+				requestToBackend.Header[k] = tmp
+			}
+			if request.Body != nil {
+				if v, ok := request.Headers["Content-Length"]; ok && len(v) == 1 && v[0] != "chunked" {
+					if size, err := strconv.Atoi(v[0]); err == nil {
+						requestToBackend.ContentLength = int64(size)
+					}
+				}
+			}
 
-		return rp(ctx, resp)
+			resp, err := re(ctx, requestToBackend)
+			if requestToBackend.Body != nil {
+				requestToBackend.Body.Close()
+			}
+
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			default:
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			resp, err = ch(ctx, resp)
+			if err != nil {
+				if t, ok := err.(responseError); ok {
+					return &Response{
+						Data: map[string]interface{}{
+							fmt.Sprintf("error_%s", t.Name()): t,
+						},
+						Metadata: Metadata{StatusCode: t.StatusCode()},
+					}, nil
+				}
+				return nil, err
+			}
+
+			return rp(ctx, resp)
+		}
 	}
 }
 
@@ -114,10 +162,10 @@ func newRequestBuilderMiddleware(l logging.Logger, remote *config.Backend) Middl
 			l.Fatal("too many proxies for this %s %s -> %s proxy middleware: newRequestBuilderMiddleware only accepts 1 proxy, got %d", remote.ParentEndpointMethod, remote.ParentEndpoint, remote.URLPattern, len(next))
 			return nil
 		}
-		return func(ctx context.Context, r *Request) (*Response, error) {
+		return func(ctx context.Context, r *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 			r.GeneratePath(remote.URLPattern)
 			r.Method = remote.Method
-			return next[0](ctx, r)
+			return next[0](ctx, r, responseWriter, requestContext)
 		}
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -85,7 +86,7 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 		)
 
 		if opt.Method == graphql.MethodGet {
-			return func(ctx context.Context, req *Request) (*Response, error) {
+			return func(ctx context.Context, req *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 				q, err := generateQueryFn(req)
 				if err != nil {
 					return nil, err
@@ -107,11 +108,11 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 					req.Query = q
 				}
 
-				return next[0](ctx, req)
+				return next[0](ctx, req, responseWriter, requestContext)
 			}
 		}
 
-		return func(ctx context.Context, req *Request) (*Response, error) {
+		return func(ctx context.Context, req *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 			b, err := generateBodyFn(req)
 			if err != nil {
 				return nil, err
@@ -122,7 +123,7 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 			req.Headers["Content-Length"] = []string{strconv.Itoa(len(b))}
 			req.Headers["Content-Type"] = []string{"application/json"}
 
-			return next[0](ctx, req)
+			return next[0](ctx, req, responseWriter, requestContext)
 		}
 	}
 }

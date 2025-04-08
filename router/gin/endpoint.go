@@ -5,7 +5,10 @@ package gin
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/textproto"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -34,6 +37,7 @@ var ErrorResponseWriter = func(c *gin.Context, err error) {
 var EndpointHandler = CustomErrorEndpointHandler(logging.NoOp, server.DefaultToHTTPError)
 
 // CustomErrorEndpointHandler returns a HandlerFactory using the injected ToHTTPError function and logger
+// Aqui e onde provavelmente ira adicionar o tratamento do ws
 func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) HandlerFactory {
 	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) gin.HandlerFunc {
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
@@ -43,18 +47,30 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 		logPrefix := "[ENDPOINT: " + configuration.Endpoint + "]"
 
 		return func(c *gin.Context) {
-			requestCtx, cancel := context.WithTimeout(c, configuration.Timeout)
-
+			var timeOut time.Duration
+			if strings.ToLower(configuration.Method) == "ws" {
+				timeOut = time.Duration((25 * time.Hour).Milliseconds())
+			} else {
+				timeOut = configuration.Timeout
+			}
+			log.Println("timeout", timeOut)
+			requestCtx, cancel := context.WithTimeout(c, timeOut)
 			c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
+			response, err := prxy(requestCtx, requestGenerator(c, configuration.QueryString), c.Writer, c.Request)
+			log.Println("return: ", response, err)
 
-			response, err := prxy(requestCtx, requestGenerator(c, configuration.QueryString))
-
-			select {
-			case <-requestCtx.Done():
-				if err == nil {
-					err = server.ErrInternalError
+			if strings.ToLower(configuration.Method) != "ws" {
+				select {
+				case <-requestCtx.Done():
+					if err == nil {
+						log.Println("ERROR 1")
+						err = server.ErrInternalError
+					}
+				default:
 				}
-			default:
+			} else {
+				cancel()
+				return
 			}
 
 			complete := server.HeaderIncompleteResponseValue

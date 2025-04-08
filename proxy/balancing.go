@@ -4,6 +4,7 @@ package proxy
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 
 	"github.com/luraproject/lura/v2/config"
@@ -89,7 +90,7 @@ func newLoadBalancedMiddleware(l logging.Logger, lb sd.Balancer) Middleware {
 			l.Fatal("too many proxies for this proxy middleware: newLoadBalancedMiddleware only accepts 1 proxy, got %d", len(next))
 			return nil
 		}
-		return func(ctx context.Context, r *Request) (*Response, error) {
+		return func(ctx context.Context, r *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 			host, err := lb.Host()
 			if err != nil {
 				return nil, err
@@ -107,7 +108,7 @@ func newLoadBalancedMiddleware(l logging.Logger, lb sd.Balancer) Middleware {
 				}
 			}
 
-			return next[0](ctx, r)
+			return next[0](ctx, r, responseWriter, requestContext)
 		}
 	}
 }

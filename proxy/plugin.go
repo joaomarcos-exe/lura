@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 
 	"github.com/luraproject/lura/v2/config"
@@ -95,8 +96,8 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 		}
 
 		if totReqModifiers == 0 {
-			return func(ctx context.Context, r *Request) (*Response, error) {
-				resp, err := next[0](ctx, r)
+			return func(ctx context.Context, r *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
+				resp, err := next[0](ctx, r, responseWriter, requestContext)
 				if err != nil {
 					return resp, err
 				}
@@ -106,25 +107,25 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 		}
 
 		if totRespModifiers == 0 {
-			return func(ctx context.Context, r *Request) (*Response, error) {
+			return func(ctx context.Context, r *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 				var err error
 				r, err = executeRequestModifiers(ctx, reqModifiers, r)
 				if err != nil {
 					return nil, err
 				}
 
-				return next[0](ctx, r)
+				return next[0](ctx, r, responseWriter, requestContext)
 			}
 		}
 
-		return func(ctx context.Context, r *Request) (*Response, error) {
+		return func(ctx context.Context, r *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 			var err error
 			r, err = executeRequestModifiers(ctx, reqModifiers, r)
 			if err != nil {
 				return nil, err
 			}
 
-			resp, err := next[0](ctx, r)
+			resp, err := next[0](ctx, r, responseWriter, requestContext)
 			if err != nil {
 				return resp, err
 			}

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/luraproject/lura/v2/config"
@@ -28,14 +29,14 @@ func NewConcurrentMiddlewareWithLogger(logger logging.Logger, remote *config.Bac
 			return nil
 		}
 
-		return func(ctx context.Context, request *Request) (*Response, error) {
+		return func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 			localCtx, cancel := context.WithTimeout(ctx, serviceTimeout)
 
 			results := make(chan *Response, remote.ConcurrentCalls)
 			failed := make(chan error, remote.ConcurrentCalls)
 
 			for i := 0; i < remote.ConcurrentCalls; i++ {
-				go processConcurrentCall(localCtx, next[0], request, results, failed)
+				go processConcurrentCall(localCtx, next[0], responseWriter, requestContext, request, results, failed)
 			}
 
 			var response *Response
@@ -66,10 +67,10 @@ func NewConcurrentMiddleware(remote *config.Backend) Middleware {
 
 var errNullResult = errors.New("invalid response")
 
-func processConcurrentCall(ctx context.Context, next Proxy, request *Request, out chan<- *Response, failed chan<- error) {
+func processConcurrentCall(ctx context.Context, next Proxy, responseWriter http.ResponseWriter, requestContext *http.Request, request *Request, out chan<- *Response, failed chan<- error) {
 	localCtx, cancel := context.WithCancel(ctx)
 
-	result, err := next(localCtx, CloneRequest(request))
+	result, err := next(localCtx, CloneRequest(request), responseWriter, requestContext)
 	if err != nil {
 		failed <- err
 		cancel()

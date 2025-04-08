@@ -53,7 +53,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF server.ToHTTPErr
 
 			requestCtx, cancel := context.WithTimeout(r.Context(), configuration.Timeout)
 
-			response, err := prxy(requestCtx, rb(r, configuration.QueryString, headersToSend))
+			response, err := prxy(requestCtx, rb(r, configuration.QueryString, headersToSend), w, r)
 
 			select {
 			case <-requestCtx.Done():

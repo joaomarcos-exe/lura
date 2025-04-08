@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"net/http"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
@@ -66,7 +67,7 @@ var (
 )
 
 // Proxy processes a request in a given context and returns a response and an error
-type Proxy func(ctx context.Context, request *Request) (*Response, error)
+type Proxy func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error)
 
 // BackendFactory creates a proxy based on the received backend configuration
 type BackendFactory func(remote *config.Backend) Proxy

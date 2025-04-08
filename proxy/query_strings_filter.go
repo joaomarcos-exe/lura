@@ -4,6 +4,7 @@ package proxy
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 
 	"github.com/luraproject/lura/v2/config"
@@ -23,9 +24,9 @@ func NewFilterQueryStringsMiddleware(logger logging.Logger, remote *config.Backe
 			return nil
 		}
 		nextProxy := next[0]
-		return func(ctx context.Context, request *Request) (*Response, error) {
+		return func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 			if len(request.Query) == 0 {
-				return nextProxy(ctx, request)
+				return nextProxy(ctx, request, responseWriter, requestContext)
 			}
 			numQueryStringsToPass := 0
 			for _, v := range remote.QueryStringsToPass {
@@ -35,7 +36,7 @@ func NewFilterQueryStringsMiddleware(logger logging.Logger, remote *config.Backe
 			}
 			if numQueryStringsToPass == len(request.Query) {
 				// all the query strings should pass, no need to clone the headers
-				return nextProxy(ctx, request)
+				return nextProxy(ctx, request, responseWriter, requestContext)
 			}
 			// ATTENTION: this is not a clone of query strings!
 			// this just filters the query strings we do not want to send:
@@ -58,7 +59,7 @@ func NewFilterQueryStringsMiddleware(logger logging.Logger, remote *config.Backe
 				Body:    request.Body,
 				Params:  request.Params,
 				Headers: request.Headers,
-			})
+			}, responseWriter, requestContext)
 		}
 	}
 }

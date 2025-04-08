@@ -4,6 +4,7 @@ package proxy
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/luraproject/lura/v2/config"
@@ -112,14 +113,14 @@ func NewShadowProxy(p1, p2 Proxy) Proxy {
 // NewShadowProxyWithTimeout returns a Proxy that sends requests to p1 and p2 but ignores
 // the response of p2. Sets a timeout in the context.
 func NewShadowProxyWithTimeout(timeout time.Duration, p1, p2 Proxy) Proxy {
-	return func(ctx context.Context, request *Request) (*Response, error) {
+	return func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 		shadowCtx, cancel := newContextWrapperWithTimeout(ctx, timeout)
 		shadowRequest := CloneRequest(request)
 		go func() {
-			p2(shadowCtx, shadowRequest)
+			p2(shadowCtx, shadowRequest, responseWriter, requestContext)
 			cancel()
 		}()
-		return p1(ctx, request)
+		return p1(ctx, request, responseWriter, requestContext)
 	}
 }
 

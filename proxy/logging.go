@@ -4,6 +4,7 @@ package proxy
 
 import (
 	"context"
+	"net/http"
 	"strings"
 	"time"
 
@@ -18,12 +19,12 @@ func NewLoggingMiddleware(logger logging.Logger, name string) Middleware {
 			logger.Fatal("too many proxies for this proxy middleware: NewLoggingMiddleware only accepts 1 proxy, got %d", len(next))
 			return nil
 		}
-		return func(ctx context.Context, request *Request) (*Response, error) {
+		return func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 			begin := time.Now()
 			logger.Info(logPrefix, "Calling backend")
 			logger.Debug(logPrefix, "Request", request)
 
-			result, err := next[0](ctx, request)
+			result, err := next[0](ctx, request, responseWriter, requestContext)
 
 			logger.Info(logPrefix, "Call to backend took", time.Since(begin).String())
 			if err != nil {

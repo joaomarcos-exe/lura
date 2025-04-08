@@ -155,14 +155,14 @@ func hasUnsafeBackends(cfg *config.EndpointConfig) bool {
 }
 
 func parallelMerge(reqCloner func(*Request) *Request, timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy {
-	return func(ctx context.Context, request *Request) (*Response, error) {
+	return func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 		localCtx, cancel := context.WithTimeout(ctx, timeout)
 
 		parts := make(chan *Response, len(next))
 		failed := make(chan error, len(next))
 
 		for _, n := range next {
-			go requestPart(localCtx, n, reqCloner(request), parts, failed)
+			go requestPart(localCtx, n, responseWriter, requestContext, reqCloner(request), parts, failed)
 		}
 
 		acc := newIncrementalMergeAccumulator(len(next), rc)
@@ -182,7 +182,7 @@ func parallelMerge(reqCloner func(*Request) *Request, timeout time.Duration, rc 
 }
 
 func sequentialMerge(reqCloner func(*Request) *Request, sequentialReplacements [][]sequentialBackendReplacement, timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy { // skipcq: GO-R1005
-	return func(ctx context.Context, request *Request) (*Response, error) {
+	return func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 		localCtx, cancel := context.WithTimeout(ctx, timeout)
 
 		parts := make([]*Response, len(next))
@@ -270,7 +270,7 @@ func sequentialMerge(reqCloner func(*Request) *Request, sequentialReplacements [
 				}
 			}
 
-			sequentialRequestPart(localCtx, n, reqCloner(request), out, errCh)
+			sequentialRequestPart(localCtx, n, responseWriter, requestContext, reqCloner(request), out, errCh)
 
 			select {
 			case err := <-errCh:
@@ -341,10 +341,10 @@ func (i *incrementalMergeAccumulator) Result() (*Response, error) {
 	return i.data, newMergeError(i.errs)
 }
 
-func requestPart(ctx context.Context, next Proxy, request *Request, out chan<- *Response, failed chan<- error) {
+func requestPart(ctx context.Context, next Proxy, responseWriter http.ResponseWriter, requestContext *http.Request, request *Request, out chan<- *Response, failed chan<- error) {
 	localCtx, cancel := context.WithCancel(ctx)
 
-	in, err := next(localCtx, request)
+	in, err := next(localCtx, request, responseWriter, requestContext)
 	if err != nil {
 		failed <- err
 		cancel()
@@ -363,10 +363,10 @@ func requestPart(ctx context.Context, next Proxy, request *Request, out chan<- *
 	cancel()
 }
 
-func sequentialRequestPart(ctx context.Context, next Proxy, request *Request, out chan<- *Response, failed chan<- error) {
+func sequentialRequestPart(ctx context.Context, next Proxy, responseWriter http.ResponseWriter, requestContext *http.Request, request *Request, out chan<- *Response, failed chan<- error) {
 	copyRequest := CloneRequest(request)
 
-	in, err := next(ctx, request)
+	in, err := next(ctx, request, responseWriter, requestContext)
 
 	*request = *copyRequest
 

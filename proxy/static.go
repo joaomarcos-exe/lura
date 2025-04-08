@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
@@ -34,8 +35,8 @@ func NewStaticMiddleware(logger logging.Logger, endpointConfig *config.EndpointC
 			logger.Fatal("too many proxies for this proxy middleware: NewStaticMiddleware only accepts 1 proxy, got %d", len(next))
 			return nil
 		}
-		return func(ctx context.Context, request *Request) (*Response, error) {
-			result, err := next[0](ctx, request)
+		return func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
+			result, err := next[0](ctx, request, responseWriter, requestContext)
 			if !cfg.Match(result, err) {
 				return result, err
 			}

@@ -4,6 +4,7 @@ package proxy
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
@@ -22,9 +23,9 @@ func NewFilterHeadersMiddleware(logger logging.Logger, remote *config.Backend) M
 			return nil
 		}
 		nextProxy := next[0]
-		return func(ctx context.Context, request *Request) (*Response, error) {
+		return func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
 			if len(request.Headers) == 0 {
-				return nextProxy(ctx, request)
+				return nextProxy(ctx, request, responseWriter, requestContext)
 			}
 			numHeadersToPass := 0
 			for _, v := range remote.HeadersToPass {
@@ -34,7 +35,7 @@ func NewFilterHeadersMiddleware(logger logging.Logger, remote *config.Backend) M
 			}
 			if numHeadersToPass == len(request.Headers) {
 				// all the headers should pass, no need to clone the headers
-				return nextProxy(ctx, request)
+				return nextProxy(ctx, request, responseWriter, requestContext)
 			}
 			// ATTENTION: this is not a clone of headers!
 			// this just filters the headers we do not want to send:
@@ -57,7 +58,7 @@ func NewFilterHeadersMiddleware(logger logging.Logger, remote *config.Backend) M
 				Body:    request.Body,
 				Params:  request.Params,
 				Headers: newHeaders,
-			})
+			}, responseWriter, requestContext)
 		}
 	}
 }

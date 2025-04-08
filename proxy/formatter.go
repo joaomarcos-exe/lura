@@ -5,6 +5,7 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/krakendio/flatmap/tree"
@@ -337,8 +338,8 @@ func NewFlatmapMiddleware(logger logging.Logger, cfg *config.EndpointConfig) Mid
 			),
 		)
 
-		return func(ctx context.Context, request *Request) (*Response, error) {
-			resp, err := next[0](ctx, request)
+		return func(ctx context.Context, request *Request, responseWriter http.ResponseWriter, requestContext *http.Request) (*Response, error) {
+			resp, err := next[0](ctx, request, responseWriter, requestContext)
 			if err != nil {
 				return resp, err
 			}
