@@ -55,9 +55,9 @@ func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, re client.HTTPRequestE
 func NewHTTPProxyDetailed(config *config.Backend, re client.HTTPRequestExecutor, ch client.HTTPStatusHandler, rp HTTPResponseParser) Proxy {
 	var wsProxy *httputil.ReverseProxy
 	log.Printf("METHOD: %s", config.Method)
+	jsonConfig, _ := json.Marshal(config)
+	log.Println("config", string(jsonConfig))
 	if strings.ToLower(config.Method) == "ws" || strings.ToLower(config.Method) == "wss" {
-		jsonConfig, _ := json.Marshal(config)
-		log.Println("config", string(jsonConfig))
 		backendURL, err := url.Parse(config.Host[0])
 		if err != nil {
 			log.Printf("Erro ao parsear URL do backend: %v", err)
