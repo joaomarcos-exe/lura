@@ -80,16 +80,15 @@ func NewHTTPProxyDetailed(config *config.Backend, re client.HTTPRequestExecutor,
 			originalDirector := wsProxy.Director
 			wsProxy.Director = func(req *http.Request) {
 				originalDirector(req)
-				req.URL.Scheme = "http"
-				req.URL.Host = request.URL.Host
-				req.URL.Path = request.Path
-				req.Header.Set("Connection", "Upgrade")
-				req.Header.Set("Upgrade", "websocket")
-				for k, vs := range request.Headers {
-					tmp := make([]string, len(vs))
-					copy(tmp, vs)
-					req.Header.Set(k, tmp[0])
+				if strings.ToLower(config.Method) == "ws" {
+					req.URL.Scheme = "http"
+				} else if strings.ToLower(config.Method) == "wss" {
+					req.URL.Scheme = "https"
 				}
+				req.URL.RawQuery = request.URL.RawQuery
+				req.URL.Host = request.URL.Host
+				req.URL.Path = request.URL.Path
+				req.Header = request.Headers
 			}
 
 			wsProxy.ServeHTTP(responseWriter, requestContext)

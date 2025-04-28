@@ -37,7 +37,7 @@ var ErrorResponseWriter = func(c *gin.Context, err error) {
 var EndpointHandler = CustomErrorEndpointHandler(logging.NoOp, server.DefaultToHTTPError)
 
 // CustomErrorEndpointHandler returns a HandlerFactory using the injected ToHTTPError function and logger
-// Aqui e onde provavelmente ira adicionar o tratamento do ws
+// EndpointHandler
 func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) HandlerFactory {
 	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) gin.HandlerFunc {
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
