@@ -296,6 +296,7 @@ type parseableEndpointConfig struct {
 	ExtraConfig     *ExtraConfig        `json:"extra_config,omitempty"`
 	HeadersToPass   []string            `json:"input_headers"`
 	OutputEncoding  string              `json:"output_encoding"`
+	Role            string              `json:"role"`
 }
 
 func (p *parseableEndpointConfig) normalize() *EndpointConfig {
