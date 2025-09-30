@@ -227,6 +227,7 @@ func newRequestWrapper(ctx context.Context, r *Request) *requestWrapper {
 		body:    r.Body,
 		params:  r.Params,
 		headers: r.Headers,
+		role:    r.Role,
 	}
 }
 
@@ -239,6 +240,7 @@ type requestWrapper struct {
 	body    io.ReadCloser
 	params  map[string]string
 	headers map[string][]string
+	role    string
 }
 
 func (r *requestWrapper) Context() context.Context     { return r.ctx }
@@ -249,6 +251,7 @@ func (r *requestWrapper) Path() string                 { return r.path }
 func (r *requestWrapper) Body() io.ReadCloser          { return r.body }
 func (r *requestWrapper) Params() map[string]string    { return r.params }
 func (r *requestWrapper) Headers() map[string][]string { return r.headers }
+func (r *requestWrapper) Role() string                 { return r.role }
 
 type metadataWrapper struct {
 	headers    map[string][]string

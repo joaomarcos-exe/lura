@@ -42,7 +42,7 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) gin.HandlerFunc {
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
-		requestGenerator := NewRequest(configuration.HeadersToPass)
+		requestGenerator := NewRequest(configuration.HeadersToPass, configuration.Role)
 		render := getRender(configuration)
 		logPrefix := "[ENDPOINT: " + configuration.Endpoint + "]"
 
@@ -128,7 +128,7 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 }
 
 // NewRequest gets a request from the current gin context and the received query string
-func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Request {
+func NewRequest(headersToSend []string, role string) func(*gin.Context, []string) *proxy.Request {
 	if len(headersToSend) == 0 {
 		headersToSend = server.HeadersToSend
 	}
@@ -184,6 +184,7 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 			Body:    c.Request.Body,
 			Params:  params,
 			Headers: headers,
+			Role:    role,
 		}
 	}
 }

@@ -17,6 +17,7 @@ type Request struct {
 	Body    io.ReadCloser
 	Params  map[string]string
 	Headers map[string][]string
+	Role    string
 }
 
 // GeneratePath takes a pattern and updates the path of the request
@@ -55,6 +56,7 @@ func (r *Request) Clone() Request {
 		Body:    r.Body,
 		Params:  r.Params,
 		Headers: r.Headers,
+		Role:    r.Role,
 	}
 }
 

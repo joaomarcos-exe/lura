@@ -242,6 +242,9 @@ type EndpointConfig struct {
 	HeadersToPass []string `mapstructure:"input_headers"`
 	// OutputEncoding defines the encoding strategy to use for the endpoint responses
 	OutputEncoding string `mapstructure:"output_encoding"`
+
+	// Role is a roule to access the endpoint
+	Role string `mapstructure:"role"`
 }
 
 // Backend defines how lura should connect to the backend service (the API resource to consume)
