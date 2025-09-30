@@ -309,6 +309,7 @@ func (p *parseableEndpointConfig) normalize() *EndpointConfig {
 		QueryString:     p.QueryString,
 		HeadersToPass:   p.HeadersToPass,
 		OutputEncoding:  p.OutputEncoding,
+		Role:            p.Role,
 	}
 	if p.ExtraConfig != nil {
 		e.ExtraConfig = *p.ExtraConfig
